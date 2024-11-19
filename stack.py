@@ -18,4 +18,5 @@ class Stack:
         self.ls = self.ls[:-1]
         return top
 
-    
+    def drop(self):
+        self.ls = self.ls[:-1]

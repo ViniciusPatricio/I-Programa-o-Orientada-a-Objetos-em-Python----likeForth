@@ -1,4 +1,5 @@
 from forth_virtual_machine import ForthVirtualMachine
+import math
 
 class LikeForthInterpreter(object):
     ''' 
@@ -22,16 +23,19 @@ class LikeForthInterpreter(object):
         self.fvm = ForthVirtualMachine()
         self.words = dict([
         ('.s', self.dots), ('.d', self.dotd), ('.',self.dot),
-        ('true',self.true), ('false',self.false), ('drop',self.drop),
+        ('true',self.true), ('false',self.false),
+        ('drop',self.drop), ('dup',self.duplication),
         ('rand',self.rand),
+        ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
+        ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root)
         ])
     
     def false(self):
-        rem = self.fvm.push(0)
+        rem = self.fvm.false()
         return rem
 
     def true(self):
-        rem = self.fvm.push(-1)
+        rem = self.fvm.true()
         return rem
     
     def rand(self):
@@ -42,16 +46,28 @@ class LikeForthInterpreter(object):
         D, _ = self.fvm.stacks()
         if  len(D) == 0:
             print("Stack empty")
+            return False
         else:
-            print(self.fvm.drop())
+            print(self.fvm.pop())
         return True
     
     def drop(self):
         D, _ = self.fvm.stacks()
         if  len(D) == 0:
             print("Stack empty")
+            return False
         else:
-            self.fvm.pop()
+            self.fvm.drop()
+        return True
+    
+    def duplication(self):
+        D, _ =  self.fvm.stacks()
+        if  len(D) == 0:
+            print("Stack empty")
+            return False
+        else:
+            self.fvm.dup()
+
         return True
     
     def dots(self):
@@ -65,6 +81,48 @@ class LikeForthInterpreter(object):
             if not callable(self.words[w]):
                 print('%s: %s'%(w, list(self.words[w])))
             return True
+
+    def plus(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2 and type(D.ls[-1]) == float and type(D.ls[-2]) == float:
+            return self.fvm.plus()
+        else:
+            return False
+
+    def minus(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2 and type(D.ls[-1]) == float and type(D.ls[-2]) == float:
+            return self.fvm.minus()
+        else:
+            return False  
+
+    def multiplication(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2 and type(D.ls[-1]) == float and type(D.ls[-2]) == float:
+            return self.fvm.multiplication()
+        else:
+            return False  
+    
+    def division(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2 and type(D.ls[-1]) == float and (D.ls[-1]) != 0 and type(D.ls[-2]) == float:
+            return self.fvm.division()
+        else:
+            return False
+    
+    def modulus(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2 and type(D.ls[-1]) == float and (D.ls[-1]) != 0 and type(D.ls[-2]) == float:
+            return self.fvm.modulus()
+        else:
+            return False
+
+    def square_root(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 1 and type(D.ls[-1]) == float:
+            return self.fvm.square_root()
+        else:
+            return False
 
     def fcompile(self, tokens):
         'Add keyword to words dictionary'
@@ -120,7 +178,7 @@ class LikeForthInterpreter(object):
     def REPL(self):
         input_str = input('?> ')
         if input_str != 'bye':
-            print(self.tokenize(input_str)) # verificar comportamento
+            #print(self.tokenize(input_str)) # verificar comportamento
             ok = self.interpret(self.tokenize(input_str))
             if not ok:
                 print('?')
