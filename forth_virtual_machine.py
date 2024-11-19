@@ -64,7 +64,7 @@ class ForthVirtualMachine:
         self.d_stack.drop()
     
     def dup(self):
-        self.d_stack.append(self.d_stack[-1])
+        self.push(self.d_stack.ls[-1])
 
     def push(self,number):
         try:
