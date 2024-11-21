@@ -27,9 +27,54 @@ class LikeForthInterpreter(object):
         ('drop',self.drop), ('dup',self.duplication),
         ('rand',self.rand),
         ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
-        ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root)
+        ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root),
+        ("swap",self.swap), ("rot",self.rot), ("over",self.over), ("pick",self.pick),
+        (">",self.is_greater_than), ("<",self.is_less_than), (">=",self.is_greater_than_or_equal),
+        ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth)
         ])
+
+    def and_forth(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.and_forth()
     
+    def or_forth(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.or_forth()
+    
+    def is_greater_than(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_greater_than()
+    
+    def is_less_than(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_greater_than()
+
+    def is_greater_than_or_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_greater_than_or_equal()
+
+    def is_less_than_or_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_less_than_or_equal()
+
     def false(self):
         rem = self.fvm.false()
         return rem
@@ -70,6 +115,33 @@ class LikeForthInterpreter(object):
 
         return True
     
+    def swap(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.swap()
+
+    def rot(self):
+        D, _ = self.fvm.stacks()
+        
+        if len(D) < 3:
+            return False
+        
+        else:
+            return self.fvm.rot()
+
+    def over(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        
+        else:
+            return self.fvm.over()
+    
+    def pick(self):
+        return self.fvm.pick()   
+
     def dots(self):
         D, R = self.fvm.stacks()
         print(f"D <{len(D)}> {str(D)} ")
