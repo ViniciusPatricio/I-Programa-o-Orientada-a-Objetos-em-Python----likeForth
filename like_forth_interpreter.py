@@ -27,7 +27,18 @@ class LikeForthInterpreter(object):
         ('drop',self.drop), ('dup',self.duplication),
         ('rand',self.rand),
         ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
-        ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root)
+        ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root),
+        ('>', self.greater_than),
+        ('>=', self.greater_than_or_equal),
+        ('<', self.less_than),
+        ('<=', self.less_than_or_equal),
+        ('eq', self.equal),
+        ('neq', self.not_equal),
+        ('or', self.logical_or),
+        ('and', self.logical_and),
+        ('>r', self.push_to_r),
+        ('r>', self.pop_from_r),
+        ('r@', self.peek_r)
         ])
     
     def false(self):
@@ -123,6 +134,105 @@ class LikeForthInterpreter(object):
             return self.fvm.square_root()
         else:
             return False
+
+    def greater_than(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.greater_than()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def greater_than_or_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.greater_than_or_equal()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def less_than(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.less_than()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def less_than_or_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.less_than_or_equal()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.equal()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def not_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.not_equal()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def logical_or(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.logical_or()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def logical_and(self):
+        D, _ = self.fvm.stacks()
+        if len(D) >= 2:
+            self.fvm.logical_and()
+            return True
+        else:
+            print("Not enough elements in stack")
+            return False
+
+    def push_to_r(self):
+        D, _ = self.fvm.stacks()
+        if len(D) == 0:
+            print("Stack empty")
+            return False
+        else:
+            self.fvm.push_to_r()
+        return True
+
+    def pop_from_r(self):
+        _, R = self.fvm.stacks()
+        if len(R) == 0:
+            print("Return stack empty")
+            return False
+        else:
+            self.fvm.pop_from_r()
+        return True
+
+    def peek_r(self):
+        _, R = self.fvm.stacks()
+        if len(R) == 0:
+            print("Return stack empty")
+            return False
+        else:
+            self.fvm.peek_r()
+        return True
 
     def fcompile(self, tokens):
         'Add keyword to words dictionary'

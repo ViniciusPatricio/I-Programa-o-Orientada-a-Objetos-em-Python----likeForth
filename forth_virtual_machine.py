@@ -10,14 +10,14 @@ class ForthVirtualMachine:
     * ( a b -- a*b ) -> Done
     / ( a b -- a/b ) -> Done
     % ( a b -- a%b ) -> Done
-    and ( a b -- -1 if a and b else 0 )
-    or ( a b -- -1 if a or b else 0 )
-    eq ( a b -- -1 if a = b else 0 )
-    neq ( a b -- 0 if a = b else -1 )
-    > ( a b -- -1 if a > b else 0 )
-    < ( a b -- -1 if a < b else 0 )
-    >= ( a b -- -1 if a >= b else 0 )
-    <= ( a b -- -1 if a <= b else 0 )
+    and ( a b -- -1 if a and b else 0 ) -> Done
+    or ( a b -- -1 if a or b else 0 ) -> Done
+    eq ( a b -- -1 if a = b else 0 ) -> Done
+    neq ( a b -- 0 if a = b else -1 ) -> Done
+    > ( a b -- -1 if a > b else 0 ) -> Done
+    < ( a b -- -1 if a < b else 0 ) -> Done
+    >= ( a b -- -1 if a >= b else 0 ) -> Done
+    <= ( a b -- -1 if a <= b else 0 ) -> Done
     sqrt ( a -- sqrt(a) ) -> Done
     true ( a -- a -1 ) -> Done
     false ( a -- a 0 ) -> Done
@@ -29,9 +29,9 @@ class ForthVirtualMachine:
     rot ( a b c -- c a b )
     drop ( a -- ) -> Done
     ======================================
-    >r ( a -- R: a )
-    r> ( R: a -- a )
-    r@ ( R: a -- a R: a )
+    >r ( a -- R: a ) -> Done
+    r> ( R: a -- a ) -> Done
+    r@ ( R: a -- a R: a ) -> Done
     ======================================
     rand -> Done
     clear ( [s] -- )
@@ -133,3 +133,55 @@ class ForthVirtualMachine:
     
     def false(self):
         return self.push(0)
+
+    def greater_than(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 > n1 else 0)
+
+    def greater_than_or_equal(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 >= n1 else 0)
+
+    def less_than(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 < n1 else 0)
+
+    def less_than_or_equal(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 <= n1 else 0)
+
+    def equal(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 == n1 else 0)
+
+    def not_equal(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 != n1 else 0)
+
+    def logical_or(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 != 0 or n1 != 0 else 0)
+
+    def logical_and(self):
+        n1 = self.d_stack.pop()
+        n2 = self.d_stack.pop()
+        self.d_stack.append(-1 if n2 != 0 and n1 != 0 else 0)
+
+    def push_to_r(self):
+        top = self.d_stack.pop()
+        self.r_stack.append(top)
+
+    def pop_from_r(self):
+        top = self.r_stack.pop()
+        self.d_stack.append(top)
+
+    def peek_r(self):
+        top = self.r_stack.ls[-1]
+        self.d_stack.append(top)
