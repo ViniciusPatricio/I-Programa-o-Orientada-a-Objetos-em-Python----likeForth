@@ -5,19 +5,21 @@ class LikeForthInterpreter(object):
     ''' 
         Simple forth interpreter. The interpreter
         includes some additional Forth words:
+
         : keyword <body> ;
         if <then-clause> [ else <else-clause> ] then
         begin <body> until
         do <body> loop
         (...)
         i ( a -- a i )
-        . ( a -- )
-        .s ( [s] -- [s] )
-        .d ( [s] -- [s] )
-        ."
-        cr
+        . ( a -- ) -> Done
+        .s ( [s] -- [s] ) -> Done
+        .d ( [s] -- [s] ) -> Done
+        ." -> Done
+        cr -> Done
         acceptn
-        bye
+        bye -> Done
+        
     '''
     def __init__(self):
         self.fvm = ForthVirtualMachine()
@@ -30,8 +32,69 @@ class LikeForthInterpreter(object):
         ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root),
         ("swap",self.swap), ("rot",self.rot), ("over",self.over), ("pick",self.pick),
         (">",self.is_greater_than), ("<",self.is_less_than), (">=",self.is_greater_than_or_equal),
-        ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth)
+        ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth),
+        ("eq",self.equal),("neq",self.different), ("clear",self.clear),
+        (">r",self.push_to_return_stack),("r>",self.pop_from_return_stack),
+        ("r@",self.copy_from_return_stack),
+        ('."',self.forth_print), ("cr",self.print_n)
         ])
+    
+    def has_decimal_places(self,value):
+        fractional_part, _ = math.modf(value)
+        return fractional_part != 0
+
+    def print_n(self):
+        print("\n")
+        return True
+
+    def forth_print(self,char):
+        try:
+            if self.has_decimal_places(char):
+                print(char,end=" ")
+            else:
+                print(int(char),end=" ")
+
+            return True
+        except:
+            return False
+        
+    def copy_from_return_stack(self):
+        D,_ = self.fvm.stacks()
+        if len(D) == 0:
+            return False
+        else:
+            return self.fvm.copy_from_return_stack()
+
+    def pop_from_return_stack(self):
+        D,_ = self.fvm.stacks()
+        if len(D) == 0:
+            return False
+        else:
+            return self.fvm.pop_from_return_stack()
+
+    def push_to_return_stack(self):
+        D,_ = self.fvm.stacks()
+        if len(D) == 0:
+            return False
+        else:
+            return self.fvm.push_to_return_stack()
+
+    def clear(self):
+        return self.fvm.clear()
+
+    def equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.equal()
+
+    def different(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.different()
 
     def and_forth(self):
         D, _ = self.fvm.stacks()
@@ -221,7 +284,17 @@ class LikeForthInterpreter(object):
         if tokens[0] in self.words:
             fun = self.words[tokens[0]]
             if callable(fun):
-                if fun():
+                if fun.__name__ == "forth_print":
+                    fun(tokens[1])
+                    if len(tokens[2:]) > 0:
+                        if not '"' in str(tokens[2]):
+                            return self.interpret(['."']+tokens[2:])
+                        else:
+                            print(tokens[2].split('"')[0],end=" ")
+                            return self.interpret(tokens[3:])
+                    else:
+                        return True
+                elif fun():
                     return self.interpret(tokens[1:])
                 else:
                     return False
@@ -250,8 +323,9 @@ class LikeForthInterpreter(object):
     def REPL(self):
         input_str = input('?> ')
         if input_str != 'bye':
-            #print(self.tokenize(input_str)) # verificar comportamento
             ok = self.interpret(self.tokenize(input_str))
+            if '."' in input_str:
+                print("")  
             if not ok:
                 print('?')
             else:

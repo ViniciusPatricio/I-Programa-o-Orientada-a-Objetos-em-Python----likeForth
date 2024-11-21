@@ -2,6 +2,9 @@ from stack import Stack
 from random import randint
 import math
 
+TRUE = -1
+FALSE = 0
+
 class ForthVirtualMachine:
     ''' Forth Virtual Machine
     ======================================
@@ -12,8 +15,8 @@ class ForthVirtualMachine:
     % ( a b -- a%b ) -> Done
     and ( a b -- -1 if a and b else 0 ) -> Done
     or ( a b -- -1 if a or b else 0 ) -> Done
-    eq ( a b -- -1 if a = b else 0 )
-    neq ( a b -- 0 if a = b else -1 )
+    eq ( a b -- -1 if a = b else 0 ) -> Done
+    neq ( a b -- 0 if a = b else -1 ) -> Done
     > ( a b -- -1 if a > b else 0 ) -> Done
     < ( a b -- -1 if a < b else 0 ) -> Done
     >= ( a b -- -1 if a >= b else 0 ) -> Done
@@ -29,20 +32,76 @@ class ForthVirtualMachine:
     rot ( a b c -- c a b ) -> Done
     drop ( a -- ) -> Done
     ======================================
-    >r ( a -- R: a )
-    r> ( R: a -- a )
-    r@ ( R: a -- a R: a )
+    >r ( a -- R: a ) -> Done
+    r> ( R: a -- a ) -> Done
+    r@ ( R: a -- a R: a ) -> Done
     ======================================
     rand -> Done
-    clear ( [s] -- )
-    stacks ( [s] -- [s] )
+    clear ( [s] -- ) -> Done
+    stacks ( [s] -- [s] ) -> Done
     pop ( a b -- a ) -> Done
     push b ( a -- a b ) -> Done
     '''
     def __init__(self):
         self.d_stack = Stack()
         self.r_stack = Stack()
+
+    def copy_from_return_stack(self):
+        
+        try:
+            top = self.r_stack.ls[-1]
+            self.d_stack.append(top)
+            return True
+        except:
+            return False
+
+    def push_to_return_stack(self):
+        try:
+            top = self.pop()
+            self.r_stack.append(top)
+            return True
+        except:
+            return False
     
+    def pop_from_return_stack(self):
+        try:
+            top = self.r_stack.pop()
+            self.d_stack.append(top)
+            return True
+        except:
+            return False
+
+    def clear(self):
+        try:
+            self.d_stack.ls = []
+            return True
+        except:
+            return False
+        
+    def equal(self):
+        try:
+            n1 = self.pop()
+            n2 = self.pop()
+            if n1 == n2:
+                self.push(TRUE)
+            else:
+                self.push(FALSE)
+            return True
+        except Exception as e:
+            return False
+
+    def different(self):
+        try:
+            n1 = self.pop()
+            n2 = self.pop()
+            if n1 != n2:
+                self.push(TRUE)
+            else:
+                self.push(FALSE)
+            return True
+        except Exception as e:
+            return False
+
     def and_forth(self):
         try:
             n1 = self.pop()
