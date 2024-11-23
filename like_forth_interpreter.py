@@ -5,19 +5,21 @@ class LikeForthInterpreter(object):
     ''' 
         Simple forth interpreter. The interpreter
         includes some additional Forth words:
+
         : keyword <body> ;
         if <then-clause> [ else <else-clause> ] then
         begin <body> until
         do <body> loop
         (...)
         i ( a -- a i )
-        . ( a -- )
-        .s ( [s] -- [s] )
-        .d ( [s] -- [s] )
-        ."
-        cr
+        . ( a -- ) -> Done
+        .s ( [s] -- [s] ) -> Done
+        .d ( [s] -- [s] ) -> Done
+        ." -> Done
+        cr -> Done
         acceptn
-        bye
+        bye -> Done
+        
     '''
     def __init__(self):
         self.fvm = ForthVirtualMachine()
@@ -28,19 +30,114 @@ class LikeForthInterpreter(object):
         ('rand',self.rand),
         ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
         ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root),
-        ('>', self.greater_than),
-        ('>=', self.greater_than_or_equal),
-        ('<', self.less_than),
-        ('<=', self.less_than_or_equal),
-        ('eq', self.equal),
-        ('neq', self.not_equal),
-        ('or', self.logical_or),
-        ('and', self.logical_and),
-        ('>r', self.push_to_r),
-        ('r>', self.pop_from_r),
-        ('r@', self.peek_r)
+        ("swap",self.swap), ("rot",self.rot), ("over",self.over), ("pick",self.pick),
+        (">",self.is_greater_than), ("<",self.is_less_than), (">=",self.is_greater_than_or_equal),
+        ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth),
+        ("eq",self.equal),("neq",self.different), ("clear",self.clear),
+        (">r",self.push_to_return_stack),("r>",self.pop_from_return_stack),
+        ("r@",self.copy_from_return_stack),
+        ('."',self.forth_print), ("cr",self.print_n)
         ])
     
+    def has_decimal_places(self,value):
+        fractional_part, _ = math.modf(value)
+        return fractional_part != 0
+
+    def print_n(self):
+        print("\n")
+        return True
+
+    def forth_print(self,char):
+        try:
+            if self.has_decimal_places(char):
+                print(char,end=" ")
+            else:
+                print(int(char),end=" ")
+
+            return True
+        except:
+            return False
+        
+    def copy_from_return_stack(self):
+        D,_ = self.fvm.stacks()
+        if len(D) == 0:
+            return False
+        else:
+            return self.fvm.copy_from_return_stack()
+
+    def pop_from_return_stack(self):
+        D,_ = self.fvm.stacks()
+        if len(D) == 0:
+            return False
+        else:
+            return self.fvm.pop_from_return_stack()
+
+    def push_to_return_stack(self):
+        D,_ = self.fvm.stacks()
+        if len(D) == 0:
+            return False
+        else:
+            return self.fvm.push_to_return_stack()
+
+    def clear(self):
+        return self.fvm.clear()
+
+    def equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.equal()
+
+    def different(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.different()
+
+    def and_forth(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.and_forth()
+    
+    def or_forth(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.or_forth()
+    
+    def is_greater_than(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_greater_than()
+    
+    def is_less_than(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_greater_than()
+
+    def is_greater_than_or_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_greater_than_or_equal()
+
+    def is_less_than_or_equal(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.is_less_than_or_equal()
+
     def false(self):
         rem = self.fvm.false()
         return rem
@@ -81,6 +178,33 @@ class LikeForthInterpreter(object):
 
         return True
     
+    def swap(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        else:
+            return self.fvm.swap()
+
+    def rot(self):
+        D, _ = self.fvm.stacks()
+        
+        if len(D) < 3:
+            return False
+        
+        else:
+            return self.fvm.rot()
+
+    def over(self):
+        D, _ = self.fvm.stacks()
+        if len(D) < 2:
+            return False
+        
+        else:
+            return self.fvm.over()
+    
+    def pick(self):
+        return self.fvm.pick()   
+
     def dots(self):
         D, R = self.fvm.stacks()
         print(f"D <{len(D)}> {str(D)} ")
@@ -135,105 +259,6 @@ class LikeForthInterpreter(object):
         else:
             return False
 
-    def greater_than(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.greater_than()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def greater_than_or_equal(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.greater_than_or_equal()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def less_than(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.less_than()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def less_than_or_equal(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.less_than_or_equal()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def equal(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.equal()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def not_equal(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.not_equal()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def logical_or(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.logical_or()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def logical_and(self):
-        D, _ = self.fvm.stacks()
-        if len(D) >= 2:
-            self.fvm.logical_and()
-            return True
-        else:
-            print("Not enough elements in stack")
-            return False
-
-    def push_to_r(self):
-        D, _ = self.fvm.stacks()
-        if len(D) == 0:
-            print("Stack empty")
-            return False
-        else:
-            self.fvm.push_to_r()
-        return True
-
-    def pop_from_r(self):
-        _, R = self.fvm.stacks()
-        if len(R) == 0:
-            print("Return stack empty")
-            return False
-        else:
-            self.fvm.pop_from_r()
-        return True
-
-    def peek_r(self):
-        _, R = self.fvm.stacks()
-        if len(R) == 0:
-            print("Return stack empty")
-            return False
-        else:
-            self.fvm.peek_r()
-        return True
-
     def fcompile(self, tokens):
         'Add keyword to words dictionary'
         keyword = tokens[0]
@@ -259,7 +284,17 @@ class LikeForthInterpreter(object):
         if tokens[0] in self.words:
             fun = self.words[tokens[0]]
             if callable(fun):
-                if fun():
+                if fun.__name__ == "forth_print":
+                    fun(tokens[1])
+                    if len(tokens[2:]) > 0:
+                        if not '"' in str(tokens[2]):
+                            return self.interpret(['."']+tokens[2:])
+                        else:
+                            print(tokens[2].split('"')[0],end=" ")
+                            return self.interpret(tokens[3:])
+                    else:
+                        return True
+                elif fun():
                     return self.interpret(tokens[1:])
                 else:
                     return False
@@ -288,8 +323,9 @@ class LikeForthInterpreter(object):
     def REPL(self):
         input_str = input('?> ')
         if input_str != 'bye':
-            #print(self.tokenize(input_str)) # verificar comportamento
             ok = self.interpret(self.tokenize(input_str))
+            if '."' in input_str:
+                print("")  
             if not ok:
                 print('?')
             else:

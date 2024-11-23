@@ -12,7 +12,7 @@ class Stack:
     
     def append(self,number):
         self.ls.append(number)
-    
+
     def pop(self):
         top = self.ls[-1]
         self.ls = self.ls[:-1]
