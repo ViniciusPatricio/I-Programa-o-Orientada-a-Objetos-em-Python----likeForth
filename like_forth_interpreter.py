@@ -7,7 +7,7 @@ class LikeForthInterpreter(object):
         includes some additional Forth words:
 
         : keyword <body> ; -> Done
-        if <then-clause> [ else <else-clause> ] then
+        if <then-clause> [ else <else-clause> ] then -> Done
         begin <body> until -> Done
         do <body> loop
         (...) -> Done
@@ -28,7 +28,7 @@ class LikeForthInterpreter(object):
 
         self.words = dict([
             ('.s', self.dots), ('.d', self.dotd), ('.',self.dot),
-            ('true',self.true), ('false',self.false),
+            ('true',self.true), ('false',self.false), 
             ('drop',self.drop), ('dup',self.duplication),
             ('rand',self.rand),
             ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
@@ -160,7 +160,7 @@ class LikeForthInterpreter(object):
         if len(D) < 2:
             return False
         else:
-            return self.fvm.is_greater_than()
+            return self.fvm.is_less_than()
 
     def is_greater_than_or_equal(self):
         D, _ = self.fvm.stacks()
@@ -382,8 +382,8 @@ class LikeForthInterpreter(object):
                             else_body = []
                         else:
                             if_body = tokens[1:else_index]
-                            else_body = tokens[else_index:then_index]
-                        
+                            else_body = tokens[else_index+1:then_index]
+
                         if output:
                             rem = self.interpret(if_body)
                         else:
@@ -418,7 +418,7 @@ class LikeForthInterpreter(object):
                 return float(s)
             except ValueError:
                 return s
-        return [string_to_num(t.lower()) for t in s.split()]
+        return [string_to_num(t) for t in s.split()]
 
     def REPL(self):
         input_str = input('?> ')
