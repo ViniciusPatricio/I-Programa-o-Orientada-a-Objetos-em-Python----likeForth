@@ -308,7 +308,7 @@ class ForthVirtualMachine:
     
     def false(self):
         return self.push(0)
-
+    """
     def greater_than(self):
         n1 = self.d_stack.pop()
         n2 = self.d_stack.pop()
@@ -360,3 +360,4 @@ class ForthVirtualMachine:
     def peek_r(self):
         top = self.r_stack.ls[-1]
         self.d_stack.append(top)
+    """

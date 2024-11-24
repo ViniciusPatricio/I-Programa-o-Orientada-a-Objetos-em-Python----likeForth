@@ -8,9 +8,9 @@ class LikeForthInterpreter(object):
 
         : keyword <body> ; -> Done
         if <then-clause> [ else <else-clause> ] then
-        begin <body> until
+        begin <body> until -> Done
         do <body> loop
-        (...)
+        (...) -> Done
         i ( a -- a i )
         . ( a -- ) -> Done
         .s ( [s] -- [s] ) -> Done
@@ -22,7 +22,10 @@ class LikeForthInterpreter(object):
 
     '''
     def __init__(self):
+        
         self.fvm = ForthVirtualMachine()
+        self.need_new_line = False
+
         self.words = dict([
             ('.s', self.dots), ('.d', self.dotd), ('.',self.dot),
             ('true',self.true), ('false',self.false),
@@ -34,15 +37,35 @@ class LikeForthInterpreter(object):
             (">",self.is_greater_than), ("<",self.is_less_than), (">=",self.is_greater_than_or_equal),
             ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth),
             ("eq",self.equal),("neq",self.different), ("clear",self.clear),
+            ("=",self.equal),
             (">r",self.push_to_return_stack),("r>",self.pop_from_return_stack),
             ("r@",self.copy_from_return_stack),
             ('."',self.forth_print), ("cr",self.print_n),
-            ("acceptn", self.acceptn)
+            ("acceptn", self.acceptn),("(",self.commentary),
+            ("begin",self.begin_until),("if",self.if_forth)
         ])
+
+    def if_forth(self)->bool:
+        top = self.fvm.pop()
+        if top == 0:
+            return False
+        else:
+            return True
+
+    def begin_until(self)->bool:
+        top = self.fvm.pop()
+        if top == 0:
+            return False
+        else:
+            return True
 
     def has_decimal_places(self,value):
         fractional_part, _ = math.modf(value)
         return fractional_part != 0
+    
+    # a funcao a principio so irar ignorar
+    def commentary(self):
+        return True
 
     def acceptn(self):
         try:
@@ -59,12 +82,17 @@ class LikeForthInterpreter(object):
 
     def forth_print(self,char):
         try:
-            if self.has_decimal_places(char):
-                print(char,end=" ")
+            if type(char) == float:
+                if self.has_decimal_places(char):
+                    print(char,end=" ")
+                else:
+                    print(int(char),end=" ")
+                self.need_new_line = True
+                return True
             else:
-                print(int(char),end=" ")
-
-            return True
+                print(char,end=" ")
+                self.need_new_line = True
+                return True
         except:
             return False
 
@@ -166,7 +194,7 @@ class LikeForthInterpreter(object):
             print("Stack empty")
             return False
         else:
-            print(self.fvm.pop())
+            self.forth_print(self.fvm.pop())
         return True
 
     def drop(self):
@@ -225,7 +253,7 @@ class LikeForthInterpreter(object):
         for w in self.words:
             if not callable(self.words[w]):
                 print('%s: %s'%(w, list(self.words[w])))
-            return True
+        return True
 
     def plus(self):
         D, _ = self.fvm.stacks()
@@ -304,6 +332,68 @@ class LikeForthInterpreter(object):
                             return self.interpret(tokens[3:])
                     else:
                         return True
+                
+                elif fun.__name__ == "commentary":
+                    if ')' not in tokens[1:]:
+                        print("')' missing")
+                        return False
+                    else:
+                        if  ')' == tokens[1]:
+                            return self.interpret(tokens[2:])
+                        else:
+                            return self.interpret([tokens[0]]+tokens[2:])
+
+                elif fun.__name__ == "begin_until":
+                    if "until" not in tokens[1:]:
+                        return False
+                    else:
+                        until_pos = tokens.index('until')
+                        body = tokens[1:until_pos]
+                        # executa o corto do loop
+                        rem = self.interpret(body)
+                        if rem:
+                            try:
+                                # verificar se o resultado e verdadeiro
+                                output = self.begin_until()
+                                if output:
+                                    return self.interpret(tokens[until_pos + 1:])
+                                else:
+                                    return self.interpret(tokens)
+                            except: 
+                                # caso for gerado algum erro, entao a 
+                                # implementacao do corpo esta errada
+                                return False
+                        else:
+                            return False
+                
+                elif fun.__name__ == "if_forth":
+                    if not "then" in tokens[1:]:
+                        return False
+                    else:
+                        then_index = tokens.index("then")
+                        else_index = -1
+                        
+                        if "else" in tokens[1:then_index]:
+                            else_index = tokens.index("else")
+                        
+                        output = fun()
+                        if else_index == -1:
+                            if_body = tokens[1:then_index]
+                            else_body = []
+                        else:
+                            if_body = tokens[1:else_index]
+                            else_body = tokens[else_index:then_index]
+                        
+                        if output:
+                            rem = self.interpret(if_body)
+                        else:
+                            rem = self.interpret(else_body)
+                        
+                        if rem:
+                            return self.interpret(tokens[then_index+1:])
+                        else:
+                            return False
+                        
                 elif fun():
                     return self.interpret(tokens[1:])
                 else:
@@ -328,14 +418,15 @@ class LikeForthInterpreter(object):
                 return float(s)
             except ValueError:
                 return s
-        return [string_to_num(t) for t in s.split()]
+        return [string_to_num(t.lower()) for t in s.split()]
 
     def REPL(self):
         input_str = input('?> ')
         if input_str != 'bye':
             ok = self.interpret(self.tokenize(input_str))
-            if '."' in input_str:
+            if self.need_new_line:
                 print("")
+                self.need_new_line = False
             if not ok:
                 print('?')
             else:
