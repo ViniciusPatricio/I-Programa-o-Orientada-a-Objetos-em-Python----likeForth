@@ -2,11 +2,11 @@ from forth_virtual_machine import ForthVirtualMachine
 import math
 
 class LikeForthInterpreter(object):
-    ''' 
+    '''
         Simple forth interpreter. The interpreter
         includes some additional Forth words:
 
-        : keyword <body> ;
+        : keyword <body> ; -> Done
         if <then-clause> [ else <else-clause> ] then
         begin <body> until
         do <body> loop
@@ -17,31 +17,41 @@ class LikeForthInterpreter(object):
         .d ( [s] -- [s] ) -> Done
         ." -> Done
         cr -> Done
-        acceptn
+        acceptn -> Done
         bye -> Done
-        
+
     '''
     def __init__(self):
         self.fvm = ForthVirtualMachine()
         self.words = dict([
-        ('.s', self.dots), ('.d', self.dotd), ('.',self.dot),
-        ('true',self.true), ('false',self.false),
-        ('drop',self.drop), ('dup',self.duplication),
-        ('rand',self.rand),
-        ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
-        ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root),
-        ("swap",self.swap), ("rot",self.rot), ("over",self.over), ("pick",self.pick),
-        (">",self.is_greater_than), ("<",self.is_less_than), (">=",self.is_greater_than_or_equal),
-        ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth),
-        ("eq",self.equal),("neq",self.different), ("clear",self.clear),
-        (">r",self.push_to_return_stack),("r>",self.pop_from_return_stack),
-        ("r@",self.copy_from_return_stack),
-        ('."',self.forth_print), ("cr",self.print_n)
+            ('.s', self.dots), ('.d', self.dotd), ('.',self.dot),
+            ('true',self.true), ('false',self.false),
+            ('drop',self.drop), ('dup',self.duplication),
+            ('rand',self.rand),
+            ('+',self.plus), ('-',self.minus), ("*",self.multiplication),
+            ("/",self.division), ('%',self.modulus), ('sqrt',self.square_root),
+            ("swap",self.swap), ("rot",self.rot), ("over",self.over), ("pick",self.pick),
+            (">",self.is_greater_than), ("<",self.is_less_than), (">=",self.is_greater_than_or_equal),
+            ("<=",self.is_less_than_or_equal), ("and",self.and_forth), ("or",self.or_forth),
+            ("eq",self.equal),("neq",self.different), ("clear",self.clear),
+            (">r",self.push_to_return_stack),("r>",self.pop_from_return_stack),
+            ("r@",self.copy_from_return_stack),
+            ('."',self.forth_print), ("cr",self.print_n),
+            ("acceptn", self.acceptn)
         ])
-    
+
     def has_decimal_places(self,value):
         fractional_part, _ = math.modf(value)
         return fractional_part != 0
+
+    def acceptn(self):
+        try:
+            value = float(input('Enter a number: '))
+            self.fvm.push(value)
+            return True
+        except ValueError:
+            print('Invalid input')
+            return False
 
     def print_n(self):
         print("\n")
@@ -57,7 +67,7 @@ class LikeForthInterpreter(object):
             return True
         except:
             return False
-        
+
     def copy_from_return_stack(self):
         D,_ = self.fvm.stacks()
         if len(D) == 0:
@@ -102,21 +112,21 @@ class LikeForthInterpreter(object):
             return False
         else:
             return self.fvm.and_forth()
-    
+
     def or_forth(self):
         D, _ = self.fvm.stacks()
         if len(D) < 2:
             return False
         else:
             return self.fvm.or_forth()
-    
+
     def is_greater_than(self):
         D, _ = self.fvm.stacks()
         if len(D) < 2:
             return False
         else:
             return self.fvm.is_greater_than()
-    
+
     def is_less_than(self):
         D, _ = self.fvm.stacks()
         if len(D) < 2:
@@ -145,11 +155,11 @@ class LikeForthInterpreter(object):
     def true(self):
         rem = self.fvm.true()
         return rem
-    
+
     def rand(self):
         rem = self.fvm.rand()
         return rem
-    
+
     def dot(self):
         D, _ = self.fvm.stacks()
         if  len(D) == 0:
@@ -158,7 +168,7 @@ class LikeForthInterpreter(object):
         else:
             print(self.fvm.pop())
         return True
-    
+
     def drop(self):
         D, _ = self.fvm.stacks()
         if  len(D) == 0:
@@ -167,7 +177,7 @@ class LikeForthInterpreter(object):
         else:
             self.fvm.drop()
         return True
-    
+
     def duplication(self):
         D, _ =  self.fvm.stacks()
         if  len(D) == 0:
@@ -177,7 +187,7 @@ class LikeForthInterpreter(object):
             self.fvm.dup()
 
         return True
-    
+
     def swap(self):
         D, _ = self.fvm.stacks()
         if len(D) < 2:
@@ -187,10 +197,10 @@ class LikeForthInterpreter(object):
 
     def rot(self):
         D, _ = self.fvm.stacks()
-        
+
         if len(D) < 3:
             return False
-        
+
         else:
             return self.fvm.rot()
 
@@ -198,12 +208,12 @@ class LikeForthInterpreter(object):
         D, _ = self.fvm.stacks()
         if len(D) < 2:
             return False
-        
+
         else:
             return self.fvm.over()
-    
+
     def pick(self):
-        return self.fvm.pick()   
+        return self.fvm.pick()
 
     def dots(self):
         D, R = self.fvm.stacks()
@@ -229,22 +239,22 @@ class LikeForthInterpreter(object):
         if len(D) >= 2 and type(D.ls[-1]) == float and type(D.ls[-2]) == float:
             return self.fvm.minus()
         else:
-            return False  
+            return False
 
     def multiplication(self):
         D, _ = self.fvm.stacks()
         if len(D) >= 2 and type(D.ls[-1]) == float and type(D.ls[-2]) == float:
             return self.fvm.multiplication()
         else:
-            return False  
-    
+            return False
+
     def division(self):
         D, _ = self.fvm.stacks()
         if len(D) >= 2 and type(D.ls[-1]) == float and (D.ls[-1]) != 0 and type(D.ls[-2]) == float:
             return self.fvm.division()
         else:
             return False
-    
+
     def modulus(self):
         D, _ = self.fvm.stacks()
         if len(D) >= 2 and type(D.ls[-1]) == float and (D.ls[-1]) != 0 and type(D.ls[-2]) == float:
@@ -280,7 +290,7 @@ class LikeForthInterpreter(object):
                 return False
             else:
                 return self.interpret(rem)
-        
+
         if tokens[0] in self.words:
             fun = self.words[tokens[0]]
             if callable(fun):
@@ -300,18 +310,18 @@ class LikeForthInterpreter(object):
                     return False
             else:
                 return self.interpret(list(fun) + tokens[1:])
-        
+
         # inserindo numero na pilha
         if type(tokens[0]) == float:
             rem = self.fvm.push(tokens[0])
             if not rem: # caso a insercao falhe
                 return False
             else:
-                return self.interpret(tokens[1:]) 
+                return self.interpret(tokens[1:])
 
-        
+
         return False
-    
+
     def tokenize(self, s):
         def string_to_num(s):
             try:
@@ -325,13 +335,13 @@ class LikeForthInterpreter(object):
         if input_str != 'bye':
             ok = self.interpret(self.tokenize(input_str))
             if '."' in input_str:
-                print("")  
+                print("")
             if not ok:
                 print('?')
             else:
                 print('<ok>')
             self.REPL()
-    
+
     def run(self, txt = None):
         self.__init__()
         if txt is None:
@@ -341,5 +351,5 @@ class LikeForthInterpreter(object):
             self.interpret(self.tokenize(txt))
 
 if __name__ == "__main__":
-    interpreter = LikeForthInterpreter()  
+    interpreter = LikeForthInterpreter()
     interpreter.run()
