@@ -45,6 +45,34 @@ class ForthVirtualMachine:
     def __init__(self):
         self.d_stack = Stack()
         self.r_stack = Stack()
+        self.loop_control_stack = Stack()
+
+    def get_len_loop_control(self):
+        return len(self.loop_control_stack)
+
+    def clear_loop_control_stack(self):
+        self.loop_control_stack.clear()
+
+    # true -> execute the loop
+    # false -> limit >= start, so no need to execute the loop
+    def compare_loop_control_stack(self)->bool:
+
+        if self.loop_control_stack.ls[-2] < self.loop_control_stack.ls[-1]:
+            return True
+        else:
+            return False
+    def att_top_loop_stack(self):
+        self.loop_control_stack.ls[-2] = self.loop_control_stack.ls[-2] + 1
+    
+    def get_i(self):
+        try:
+            return self.push(self.loop_control_stack.ls[-2])
+        except:
+            return None 
+        
+    def push_loop_stack(self,number):
+        self.loop_control_stack.append(number)
+        return True
 
     def copy_from_return_stack(self):
         
@@ -66,6 +94,7 @@ class ForthVirtualMachine:
     def pop_from_return_stack(self):
         try:
             top = self.r_stack.pop()
+            print(top)
             self.d_stack.append(top)
             return True
         except:

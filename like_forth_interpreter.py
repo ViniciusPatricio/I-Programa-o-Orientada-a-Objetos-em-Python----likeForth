@@ -9,9 +9,9 @@ class LikeForthInterpreter(object):
         : keyword <body> ; -> Done
         if <then-clause> [ else <else-clause> ] then -> Done
         begin <body> until -> Done
-        do <body> loop
+        do <body> loop -> Done
         (...) -> Done
-        i ( a -- a i )
+        i ( a -- a i ) -> Done
         . ( a -- ) -> Done
         .s ( [s] -- [s] ) -> Done
         .d ( [s] -- [s] ) -> Done
@@ -42,9 +42,30 @@ class LikeForthInterpreter(object):
             ("r@",self.copy_from_return_stack),
             ('."',self.forth_print), ("cr",self.print_n),
             ("acceptn", self.acceptn),("(",self.commentary),
-            ("begin",self.begin_until),("if",self.if_forth)
+            ("begin",self.begin_until),("if",self.if_forth),("do",self.do_loop),
+            ("i",self.get_i)
         ])
 
+    def get_i(self):
+            self.fvm.get_i()
+            return True
+    
+    def do_loop(self)->bool:
+        D, _ = self.fvm.stacks()
+        # Inicializando o primeiro laco
+        if len(self.fvm.loop_control_stack) == 0:
+            if len(D) < 2:
+                return False
+            else:
+
+                limit = D.pop()
+                start = D.pop()
+                
+                self.fvm.push_loop_stack(limit)
+                self.fvm.push_loop_stack(start)
+
+        return True
+       
     def if_forth(self)->bool:
         top = self.fvm.pop()
         if top == 0:
@@ -77,7 +98,8 @@ class LikeForthInterpreter(object):
             return False
 
     def print_n(self):
-        print("\n")
+        print("\n",end="")
+        self.need_new_line = False
         return True
 
     def forth_print(self,char):
@@ -104,8 +126,8 @@ class LikeForthInterpreter(object):
             return self.fvm.copy_from_return_stack()
 
     def pop_from_return_stack(self):
-        D,_ = self.fvm.stacks()
-        if len(D) == 0:
+        _,R = self.fvm.stacks()
+        if len(R) == 0:
             return False
         else:
             return self.fvm.pop_from_return_stack()
@@ -393,7 +415,35 @@ class LikeForthInterpreter(object):
                             return self.interpret(tokens[then_index+1:])
                         else:
                             return False
+                
+                elif fun.__name__ == "do_loop":
+                    # verifica se tem os argumentos necessarios
+                    # para executar o do - looping
+                    if fun():
+                        if "loop" in tokens[1:]:
+                            
+                            loop_index = tokens.index("loop")
+                            loop_body = tokens[1:loop_index]
+                            # se a condicao ainda nao foi satisfeita
+                            # executa o corpo do loop
                         
+                            if self.fvm.compare_loop_control_stack():
+                                rem = self.interpret(loop_body)
+                                if rem:
+                                    self.fvm.att_top_loop_stack()
+                                    return self.interpret(tokens)
+                                else:
+                                    return False
+                            else:
+                                # clear
+                                self.fvm.clear_loop_control_stack() 
+                                return self.interpret(tokens[loop_index+1:])
+                        else:
+                            print("'loop' missing")
+                            return False
+                    else:
+                        return False
+
                 elif fun():
                     return self.interpret(tokens[1:])
                 else:
@@ -432,6 +482,7 @@ class LikeForthInterpreter(object):
             else:
                 print('<ok>')
             self.REPL()
+       
 
     def run(self, txt = None):
         self.__init__()
@@ -440,6 +491,7 @@ class LikeForthInterpreter(object):
             self.REPL()
         else:
             self.interpret(self.tokenize(txt))
+            print("\n\n") 
 
 if __name__ == "__main__":
     interpreter = LikeForthInterpreter()
